@@ -17,7 +17,7 @@ defmodule HubWeb.Router do
   scope "/", HubWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", FeedLive
   end
 
   scope "/webhooks", HubWeb do

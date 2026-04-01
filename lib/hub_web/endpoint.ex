@@ -38,6 +38,10 @@ defmodule HubWeb.Endpoint do
     param_key: "request_logger",
     cookie_key: "request_logger"
 
+  if Application.compile_env(:hub, :sql_sandbox) do
+    plug Phoenix.Ecto.SQL.Sandbox
+  end
+
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 
