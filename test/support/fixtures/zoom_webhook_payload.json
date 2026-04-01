@@ -1,0 +1,25 @@
+{
+  "event": "recording.transcript_completed",
+  "event_ts": 1711800000000,
+  "payload": {
+    "account_id": "ABCDEF",
+    "object": {
+      "uuid": "abc123==",
+      "id": 98765432,
+      "host_id": "user-id-123",
+      "host_email": "host@tenfore.com",
+      "topic": "Sawyer Creek Weekly Check-in",
+      "start_time": "2026-03-30T14:00:00Z",
+      "recording_files": [
+        {
+          "id": "transcript-file-id",
+          "recording_type": "audio_transcript",
+          "file_type": "TRANSCRIPT",
+          "file_extension": "VTT",
+          "download_url": "https://zoom.us/rec/download/fake-url",
+          "status": "completed"
+        }
+      ]
+    }
+  }
+}

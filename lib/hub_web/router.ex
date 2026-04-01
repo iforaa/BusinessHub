@@ -20,6 +20,11 @@ defmodule HubWeb.Router do
     get "/", PageController, :home
   end
 
+  scope "/webhooks", HubWeb do
+    pipe_through :api
+    post "/zoom", ZoomWebhookController, :handle
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", HubWeb do
   #   pipe_through :api

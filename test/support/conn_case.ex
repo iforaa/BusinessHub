@@ -23,6 +23,7 @@ defmodule HubWeb.ConnCase do
       @endpoint HubWeb.Endpoint
 
       use HubWeb, :verified_routes
+      use Oban.Testing, repo: Hub.Repo
 
       # Import conveniences for testing with connections
       import Plug.Conn
