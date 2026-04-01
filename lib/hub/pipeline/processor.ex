@@ -3,6 +3,7 @@ defmodule Hub.Pipeline.Processor do
 
   alias Hub.Documents.{RawDocument, ProcessedDocument, Signal}
   alias Hub.Clients.Resolver
+  alias Hub.People.Resolver, as: PeopleResolver
   alias Hub.Pipeline.{Chunker, Extractor, Merger}
   alias Hub.Repo
 
@@ -15,7 +16,8 @@ defmodule Hub.Pipeline.Processor do
     with {:ok, extraction} <- extract(raw_doc, args),
          {:ok, processed_doc} <- store_processed(raw_doc, extraction),
          :ok <- store_signals(processed_doc, extraction.signals),
-         :ok <- Resolver.resolve_and_link(raw_doc, extraction.client_names) do
+         :ok <- Resolver.resolve_and_link(raw_doc, extraction.client_names),
+         :ok <- PeopleResolver.resolve_and_link(raw_doc, raw_doc.participants) do
       Phoenix.PubSub.broadcast(Hub.PubSub, "documents", {:document_processed, processed_doc.id})
       Logger.info("Processed document #{raw_doc_id} — #{length(extraction.signals)} signals extracted")
       :ok

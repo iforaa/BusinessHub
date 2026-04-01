@@ -15,6 +15,7 @@ defmodule Hub.Documents.RawDocument do
     field :ingested_at, :utc_datetime_usec
 
     many_to_many :clients, Hub.Clients.Client, join_through: "document_clients"
+    many_to_many :people, Hub.People.Person, join_through: "document_people"
 
     timestamps(type: :utc_datetime_usec)
   end
