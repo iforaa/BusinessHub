@@ -8,23 +8,26 @@ defmodule Hub.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      HubWeb.Telemetry,
       Hub.Repo,
       {Oban, Application.fetch_env!(:hub, Oban)},
+      HubWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:hub, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Hub.PubSub},
-      # Start the Finch HTTP client for sending emails
-      {Finch, name: Hub.Finch},
-      # Start a worker by calling: Hub.Worker.start_link(arg)
-      # {Hub.Worker, arg},
-      # Start to serve requests, typically the last entry
       HubWeb.Endpoint
-    ]
+    ] ++ zoom_children()
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Hub.Supervisor]
     Supervisor.start_link(children, opts)
+  end
+
+  defp zoom_children do
+    config = Application.get_env(:hub, :zoom)
+
+    if config && config[:account_id] do
+      [Hub.Plugins.Zoom.Auth]
+    else
+      []
+    end
   end
 
   # Tell Phoenix to update the endpoint configuration

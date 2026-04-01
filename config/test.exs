@@ -39,3 +39,13 @@ config :phoenix_live_view,
   enable_expensive_runtime_checks: true
 
 config :hub, Oban, testing: :manual
+
+config :hub, :zoom,
+  account_id: nil,
+  client_id: nil,
+  client_secret: nil,
+  webhook_secret: "test-secret"
+
+config :hub, :claude,
+  api_key: "test-key",
+  model: "claude-sonnet-4-20250514"
