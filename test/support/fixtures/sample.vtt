@@ -1,0 +1,21 @@
+WEBVTT
+
+1
+00:00:03.450 --> 00:00:08.120
+Igor Kuznetsov: Good morning everyone, let's talk about the kiosk update.
+
+2
+00:00:08.900 --> 00:00:15.340
+Austin Smith: Sure. So Sawyer Creek called yesterday about the Apple Pay issue.
+
+3
+00:00:16.000 --> 00:00:22.500
+Austin Smith: They said their members keep asking for it. It's becoming a dealbreaker.
+
+4
+00:00:23.100 --> 00:00:30.800
+Igor Kuznetsov: Got it. I'll look into the Apple Pay integration this sprint. Any other feedback?
+
+5
+00:00:31.500 --> 00:00:38.200
+Austin Smith: Pine Valley mentioned that the subcourse switcher is confusing. They want it simplified.
