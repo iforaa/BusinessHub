@@ -18,6 +18,9 @@ defmodule HubWeb.Router do
     pipe_through :browser
 
     live "/", FeedLive
+    live "/documents/:id", DocumentLive
+    live "/clients/:id", ClientLive
+    live "/search", SearchLive
   end
 
   scope "/webhooks", HubWeb do
