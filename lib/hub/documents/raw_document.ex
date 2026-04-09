@@ -14,6 +14,8 @@ defmodule Hub.Documents.RawDocument do
     field :metadata, :map, default: %{}
     field :ingested_at, :utc_datetime_usec
 
+    has_one :processed_document, Hub.Documents.ProcessedDocument
+
     many_to_many :clients, Hub.Clients.Client, join_through: "document_clients"
     many_to_many :people, Hub.People.Person, join_through: "document_people"
 

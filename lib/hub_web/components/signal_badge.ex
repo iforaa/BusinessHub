@@ -11,7 +11,7 @@ defmodule HubWeb.Components.SignalBadge do
   }
 
   @labels %{
-    "feature_request" => "Feature Request",
+    "feature_request" => "Feature",
     "bug_report" => "Bug Report",
     "competitor_mention" => "Competitor",
     "churn_signal" => "Churn Risk",

@@ -33,6 +33,12 @@ topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
 window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
 window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
 
+// Clear search input when server pushes clear-search event
+window.addEventListener("phx:clear-search", () => {
+  const input = document.getElementById("search-input")
+  if (input) input.value = ""
+})
+
 // connect if there are any LiveViews on the page
 liveSocket.connect()
 

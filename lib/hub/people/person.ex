@@ -12,6 +12,10 @@ defmodule Hub.People.Person do
     field :email, :string
     field :aliases, {:array, :string}, default: []
     field :metadata, :map, default: %{}
+    field :role, :string, default: "unknown"
+    field :context, :string, default: ""
+    field :color, :string
+    field :avatar_url, :string
 
     many_to_many :raw_documents, RawDocument, join_through: "document_people"
 
@@ -20,7 +24,8 @@ defmodule Hub.People.Person do
 
   def changeset(person, attrs) do
     person
-    |> cast(attrs, [:name, :email, :aliases, :metadata])
+    |> cast(attrs, [:name, :email, :aliases, :metadata, :role, :context, :color, :avatar_url])
+    |> unique_constraint(:color)
     |> validate_required([:name])
     |> unique_constraint(:name)
   end

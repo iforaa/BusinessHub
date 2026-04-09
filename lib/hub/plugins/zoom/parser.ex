@@ -15,7 +15,10 @@ defmodule Hub.Plugins.Zoom.Parser do
   @timestamp_pattern ~r/(\d{2}):(\d{2}):(\d{2})\.(\d{3})/
 
   def parse_vtt(content) when is_binary(content) do
-    content = String.trim(content)
+    content =
+      content
+      |> String.replace("\r\n", "\n")
+      |> String.trim()
 
     if content == "" or not String.starts_with?(content, "WEBVTT") do
       {:error, :invalid_vtt}

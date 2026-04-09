@@ -4,7 +4,7 @@ defmodule HubWeb.ClientLive do
   import HubWeb.Components.DocumentCard
 
   alias Hub.Clients.Client
-  alias Hub.Documents.{ProcessedDocument, RawDocument}
+  alias Hub.Documents.RawDocument
   alias Hub.Repo
 
   import Ecto.Query
@@ -14,18 +14,21 @@ defmodule HubWeb.ClientLive do
     client = Repo.get!(Client, id)
 
     documents =
-      from(pd in ProcessedDocument,
-        join: rd in assoc(pd, :raw_document),
+      from(rd in RawDocument,
         join: dc in "document_clients", on: dc.raw_document_id == rd.id,
+        left_join: pd in assoc(rd, :processed_document),
+        left_join: s in assoc(pd, :signals),
         where: dc.client_id == ^id,
-        preload: [:signals, raw_document: rd],
-        order_by: [desc: pd.processed_at]
+        preload: [processed_document: {pd, signals: s}],
+        order_by: [desc: rd.ingested_at]
       )
       |> Repo.all()
 
     signal_counts =
       documents
-      |> Enum.flat_map(& &1.signals)
+      |> Enum.flat_map(fn rd ->
+        if rd.processed_document, do: rd.processed_document.signals, else: []
+      end)
       |> Enum.frequencies_by(& &1.type)
 
     {:ok, assign(socket, client: client, documents: documents, signal_counts: signal_counts, page_title: client.name)}

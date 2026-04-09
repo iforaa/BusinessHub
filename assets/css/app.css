@@ -2,4 +2,35 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
-/* This file is for your main application CSS */
+:root {
+  --bg: #f8f7f4;
+  --surface: #fff;
+  --border: #e8e5df;
+  --border-hover: #d4cdc0;
+  --text: #2d2a26;
+  --text-secondary: #5c5549;
+  --text-muted: #a09888;
+  --accent: #c4b89c;
+  --subtle-bg: #f0ece4;
+  --subtle-bg-2: #faf8f5;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+mark {
+  background: #f5edd4;
+  color: #6b5d3e;
+  border-radius: 2px;
+  padding: 1px 3px;
+}
+
+/* Prose-like styling for AI answers without requiring typography plugin */
+.prose-hub p { margin-bottom: 0.625rem; }
+.prose-hub strong { color: var(--text); }
+.prose-hub ul, .prose-hub ol { margin: 0.5rem 0; padding-left: 1.5rem; }
+.prose-hub li { margin-bottom: 0.25rem; }
+.prose-hub h3 { font-size: 1rem; font-weight: 600; margin: 1rem 0 0.375rem; }

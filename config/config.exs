@@ -66,6 +66,12 @@ config :hub, Oban,
   queues: [
     zoom: 5,
     pipeline: 3
+  ],
+  plugins: [
+    {Oban.Plugins.Cron,
+     crontab: [
+       {"0 * * * *", Hub.Plugins.Zoom.PollWorker}
+     ]}
   ]
 
 # Import environment specific config. This must remain at the bottom

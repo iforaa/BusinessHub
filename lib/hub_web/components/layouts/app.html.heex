@@ -1,14 +1,12 @@
-<header class="bg-white border-b border-gray-200">
-  <nav class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-    <.link navigate="/" class="text-xl font-bold text-gray-900">TenFore Hub</.link>
-    <div class="flex gap-6 text-sm">
-      <.link navigate="/" class="text-gray-600 hover:text-gray-900">Feed</.link>
-      <.link navigate="/people" class="text-gray-600 hover:text-gray-900">People</.link>
-      <.link navigate="/search" class="text-gray-600 hover:text-gray-900">Search</.link>
-    </div>
+<header class="bg-white border-b" style="border-color: #e8e5df;">
+  <nav class="max-w-7xl mx-auto px-6 py-3 flex items-center gap-6">
+    <.link navigate="/" class="text-lg font-bold tracking-tight" style="color: #2d2a26;">
+      TenFore <span style="color: #7c6f5b; font-weight: 400;">Hub</span>
+    </.link>
+    <.link navigate="/people" class="text-sm rounded-md px-3 py-1.5 transition-colors" style="color: #7c6f5b;" onmouseover="this.style.background='#f0ece4';this.style.color='#2d2a26'" onmouseout="this.style.background='';this.style.color='#7c6f5b'">People</.link>
   </nav>
 </header>
-<main class="min-h-screen bg-gray-50">
+<main class="min-h-screen" style="background: #f8f7f4;">
   <.flash_group flash={@flash} />
   <%= @inner_content %>
 </main>

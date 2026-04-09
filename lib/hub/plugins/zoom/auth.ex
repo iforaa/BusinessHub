@@ -16,6 +16,10 @@ defmodule Hub.Plugins.Zoom.Auth do
     GenServer.call(__MODULE__, :get_token)
   end
 
+  def refresh_token do
+    GenServer.call(__MODULE__, :refresh_token)
+  end
+
   def build_auth_header(client_id, client_secret) do
     encoded = Base.encode64("#{client_id}:#{client_secret}")
     "Basic #{encoded}"
@@ -55,6 +59,18 @@ defmodule Hub.Plugins.Zoom.Auth do
 
   def handle_call(:get_token, _from, state) do
     {:reply, {:ok, state.token}, state}
+  end
+
+  def handle_call(:refresh_token, _from, state) do
+    case fetch_token(state.config) do
+      {:ok, token, expires_in} ->
+        schedule_refresh(expires_in)
+        new_state = %{state | token: token, expires_at: System.monotonic_time(:millisecond) + expires_in * 1000}
+        {:reply, {:ok, token}, new_state}
+
+      {:error, reason} ->
+        {:reply, {:error, reason}, state}
+    end
   end
 
   @impl true

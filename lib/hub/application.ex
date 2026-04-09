@@ -13,6 +13,7 @@ defmodule Hub.Application do
       HubWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:hub, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Hub.PubSub},
+      {Task.Supervisor, name: Hub.TaskSupervisor},
       HubWeb.Endpoint
     ] ++ zoom_children()
 

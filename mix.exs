@@ -60,7 +60,9 @@ defmodule Hub.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.5"},
       {:oban, "~> 2.18"},
-      {:req, "~> 0.5"}
+      {:req, "~> 0.5"},
+      {:pgvector, "~> 0.3.0"},
+      {:earmark, "~> 1.4"}
     ]
   end
 
