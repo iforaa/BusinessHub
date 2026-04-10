@@ -20,6 +20,9 @@ if System.get_env("PHX_SERVER") do
   config :hub, HubWeb.Endpoint, server: true
 end
 
+config :hub, :google,
+  client_id: System.get_env("GOOGLE_CLIENT_ID")
+
 config :hub, :zoom,
   account_id: System.get_env("ZOOM_ACCOUNT_ID"),
   client_id: System.get_env("ZOOM_CLIENT_ID"),
@@ -41,7 +44,8 @@ if config_env() == :prod do
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
   config :hub, Hub.Repo,
-    # ssl: true,
+    ssl: true,
+    ssl_opts: [verify: :verify_none],
     url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
     socket_options: maybe_ipv6

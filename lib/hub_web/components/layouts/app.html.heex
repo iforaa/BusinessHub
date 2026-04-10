@@ -4,6 +4,16 @@
       TenFore <span style="color: #7c6f5b; font-weight: 400;">Hub</span>
     </.link>
     <.link navigate="/people" class="text-sm rounded-md px-3 py-1.5 transition-colors" style="color: #7c6f5b;" onmouseover="this.style.background='#f0ece4';this.style.color='#2d2a26'" onmouseout="this.style.background='';this.style.color='#7c6f5b'">People</.link>
+
+    <%= if assigns[:current_user] do %>
+      <div class="ml-auto flex items-center gap-3">
+        <%= if @current_user[:picture] do %>
+          <img src={@current_user.picture} class="w-6 h-6 rounded-full" referrerpolicy="no-referrer" />
+        <% end %>
+        <span class="text-xs" style="color: #5c5549;"><%= @current_user[:name] || @current_user[:email] %></span>
+        <.link href="/logout" class="text-xs hover:underline" style="color: #a09888;">Sign out</.link>
+      </div>
+    <% end %>
   </nav>
 </header>
 <main class="min-h-screen" style="background: #f8f7f4;">

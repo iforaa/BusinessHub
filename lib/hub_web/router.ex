@@ -10,17 +10,36 @@ defmodule HubWeb.Router do
     plug :put_secure_browser_headers
   end
 
+  pipeline :require_auth do
+    plug HubWeb.Plugs.Auth, require_auth: true
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
+    plug :fetch_session
   end
 
   scope "/", HubWeb do
     pipe_through :browser
 
-    live "/", FeedLive
-    live "/people", PeopleLive
-    live "/documents/raw/:id", DocumentLive, :raw
-    live "/clients/:id", ClientLive
+    live "/login", LoginLive
+    get "/logout", AuthController, :logout
+  end
+
+  scope "/auth", HubWeb do
+    pipe_through [:api]
+    post "/google", AuthController, :google
+  end
+
+  scope "/", HubWeb do
+    pipe_through [:browser, :require_auth]
+
+    live_session :require_auth, on_mount: {HubWeb.Plugs.Auth, :require_auth} do
+      live "/", FeedLive
+      live "/people", PeopleLive
+      live "/documents/raw/:id", DocumentLive, :raw
+      live "/clients/:id", ClientLive
+    end
   end
 
   scope "/webhooks", HubWeb do
@@ -28,18 +47,7 @@ defmodule HubWeb.Router do
     post "/zoom", ZoomWebhookController, :handle
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", HubWeb do
-  #   pipe_through :api
-  # end
-
-  # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:hub, :dev_routes) do
-    # If you want to use the LiveDashboard in production, you should put
-    # it behind authentication and allow only admins to access it.
-    # If your application does not have an admins-only section yet,
-    # you can use Plug.BasicAuth to set up some basic authentication
-    # as long as you are also using SSL (which you should anyway).
     import Phoenix.LiveDashboard.Router
 
     scope "/dev" do

@@ -23,9 +23,66 @@ import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+
+const Hooks = {
+  GoogleSignIn: {
+    mounted() {
+      const clientId = this.el.dataset.clientId
+      const el = this.el
+
+      const init = () => {
+        window.google.accounts.id.disableAutoSelect()
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+          ux_mode: "popup",
+          hd: "tenfore.golf",
+          callback: (response) => {
+            fetch("/auth/google", {
+              method: "POST",
+              headers: {"Content-Type": "application/json"},
+              body: JSON.stringify({credential: response.credential})
+            })
+              .then(r => r.json())
+              .then(data => {
+                if (data.success) {
+                  window.location.href = "/"
+                } else {
+                  alert(data.error || "Login failed")
+                }
+              })
+              .catch(() => alert("Login failed"))
+          }
+        })
+        window.google.accounts.id.renderButton(el, {
+          theme: "outline",
+          size: "large",
+          text: "signin_with",
+          shape: "rectangular",
+          logo_alignment: "left",
+          width: 280
+        })
+      }
+
+      if (window.google && window.google.accounts) {
+        init()
+      } else {
+        const script = document.createElement("script")
+        script.src = "https://accounts.google.com/gsi/client"
+        script.async = true
+        script.defer = true
+        script.onload = init
+        document.head.appendChild(script)
+      }
+    }
+  }
+}
+
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
-  params: {_csrf_token: csrfToken}
+  params: {_csrf_token: csrfToken},
+  hooks: Hooks
 })
 
 // Show progress bar on live navigation and form submits
