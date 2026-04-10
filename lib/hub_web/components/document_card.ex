@@ -12,10 +12,7 @@ defmodule HubWeb.Components.DocumentCard do
     assigns =
       assigns
       |> assign(:processed, processed)
-      |> assign(:doc_link, if(processed,
-        do: "/documents/#{processed.id}",
-        else: "/documents/raw/#{assigns.document.id}"
-      ))
+      |> assign(:doc_link, "/documents/raw/#{assigns.document.id}")
       |> assign(:last_participant_idx, length(assigns.document.participants) - 1)
 
     ~H"""
@@ -50,15 +47,12 @@ defmodule HubWeb.Components.DocumentCard do
             </div>
           <% end %>
         <% else %>
-          <p class="text-sm italic" style="color: #a09888;"><%= transcript_preview(@document.content) %></p>
+          <p class="text-sm italic" style="color: #a09888;">Awaiting AI processing...</p>
         <% end %>
       </div>
     </.link>
     """
   end
 
-  defp transcript_preview(nil), do: "No content"
-  defp transcript_preview(content) when byte_size(content) <= 200, do: content
-  defp transcript_preview(content), do: String.slice(content, 0, 200) <> "..."
 
 end

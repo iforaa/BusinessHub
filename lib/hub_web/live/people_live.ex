@@ -42,9 +42,13 @@ defmodule HubWeb.PeopleLive do
   end
 
   defp update_person(id, attrs) do
-    Repo.get!(Person, id)
-    |> Person.changeset(attrs)
-    |> Repo.update!()
+    result =
+      Repo.get!(Person, id)
+      |> Person.changeset(attrs)
+      |> Repo.update!()
+
+    Hub.Cache.invalidate("people:sidebar")
+    result
   end
 
   defp reload_people(socket) do

@@ -46,4 +46,18 @@ defmodule Hub.Colors do
   }
 
   def hex_color(color_name), do: Map.get(@hex_colors, color_name, "#7c6f5b")
+
+  @initial_bg_colors [
+    "#8b7355", "#6b8e6b", "#7b6b8e", "#8e7b6b", "#6b7b8e",
+    "#8e6b7b", "#6b8e7b", "#7b8e6b", "#856b6b", "#6b7085",
+    "#857b6b", "#6b856b", "#7b6b85", "#856b7b", "#6b8585",
+    "#85856b", "#6b6b85", "#856b85"
+  ]
+
+  def initial_color(name) when is_binary(name) do
+    idx = :erlang.phash2(name, length(@initial_bg_colors))
+    Enum.at(@initial_bg_colors, idx)
+  end
+
+  def initial_color(_), do: "#8b7355"
 end

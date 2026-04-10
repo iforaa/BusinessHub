@@ -11,28 +11,48 @@ defmodule Hub.Documents.AiSearch do
 
   @max_context_chars 30_000
 
-  def query(question) do
-    chunks = retrieve_chunks(question)
+  def query(question, opts \\ []) do
+    on_step = opts[:on_step] || fn _ -> :ok end
+    user = opts[:user]
+
+    on_step.("embedding")
+    chunks = retrieve_chunks(question, on_step)
 
     if chunks == [] do
       {:ok, %{answer: "I couldn't find any relevant conversations for that question.", sources: []}}
     else
+      on_step.("context")
       context = build_context(chunks)
-      system = build_system_prompt()
+      system = build_system_prompt(user)
       prompt = build_prompt(question, context)
 
-      case Claude.Client.chat(prompt, system: system, max_tokens: 2048) do
-        {:ok, response} -> {:ok, parse_answer(response, chunks)}
-        {:error, reason} -> {:error, reason}
+      on_stream = opts[:on_stream]
+
+      if on_stream do
+        on_step.("thinking")
+        full_text = stream_answer(prompt, system, on_stream)
+        on_step.("done")
+        {:ok, parse_answer(full_text, chunks)}
+      else
+        on_step.("thinking")
+        case Claude.Client.chat(prompt, system: system, max_tokens: 2048) do
+          {:ok, response} ->
+            on_step.("done")
+            {:ok, parse_answer(response, chunks)}
+          {:error, reason} -> {:error, reason}
+        end
       end
     end
   end
 
-  defp retrieve_chunks(question) do
-    # Try embedding-based search first
+  defp retrieve_chunks(question, on_step) do
     case retrieve_by_embedding(question) do
-      {:ok, results} when results != [] -> results
-      _ -> retrieve_by_fts(question)
+      {:ok, results} when results != [] ->
+        on_step.("searching")
+        results
+      _ ->
+        on_step.("searching")
+        retrieve_by_fts(question)
     end
   end
 
@@ -109,6 +129,35 @@ defmodule Hub.Documents.AiSearch do
     end
   end
 
+  defp stream_answer(prompt, system, on_stream) do
+    {:ok, agent} = Agent.start_link(fn -> {"", 0} end)
+
+    try do
+      Claude.Client.stream(prompt,
+        system: system,
+        max_tokens: 2048,
+        on_chunk: fn text ->
+          {full, should_send} = Agent.get_and_update(agent, fn {acc, last_sent} ->
+            new = acc <> text
+            now = System.monotonic_time(:millisecond)
+            if now - last_sent > 80 do
+              {{new, true}, {new, now}}
+            else
+              {{new, false}, {new, last_sent}}
+            end
+          end)
+          if should_send, do: on_stream.(full)
+        end
+      )
+
+      {result, _} = Agent.get(agent, & &1)
+      on_stream.(result)
+      result
+    after
+      Agent.stop(agent)
+    end
+  end
+
   defp build_context(chunks) do
     chunks
     |> Enum.with_index(1)
@@ -128,16 +177,31 @@ defmodule Hub.Documents.AiSearch do
     |> elem(0)
   end
 
-  defp build_system_prompt do
+  defp build_system_prompt(user) do
+    user_line = if user, do: "The person asking is #{user.name} (#{user.email}).", else: ""
+
     """
     You are an AI assistant for TenFore, a golf course management software company. You answer questions about what was discussed in team meetings.
+
+    Today's date: #{Date.utc_today() |> Date.to_iso8601()}
+    #{user_line}
 
     TenFore employees:
     #{Roster.employees_prompt()}
 
+    TenFore products:
+    - Fox: booking frontend (web)
+    - Swan: backend API
+    - Birdie: legacy tee sheet app
+    - Buck: new tee sheet app (web + mobile)
+    - Crane: mobile app (iOS/Android)
+    - Jackrabbit: internal tools
+
     When answering:
     - Be concise and direct
     - Reference specific conversations using [1], [2], etc. citations
+    - Use relative dates when helpful ("last week", "3 days ago") since you know today's date
+    - If the person asking was mentioned in the transcripts, use "you" instead of their name
     - If the transcripts don't contain relevant information, say so
     - Focus on facts from the transcripts, don't speculate
     """

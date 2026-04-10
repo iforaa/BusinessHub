@@ -11,6 +11,15 @@ defmodule Hub.Pipeline.Processor do
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: %{"raw_document_id" => raw_doc_id} = args}) do
+    if Repo.get_by(ProcessedDocument, raw_document_id: raw_doc_id) do
+      Logger.info("Document #{raw_doc_id} already processed, skipping")
+      :ok
+    else
+      perform_extraction(raw_doc_id, args)
+    end
+  end
+
+  defp perform_extraction(raw_doc_id, args) do
     raw_doc = Repo.get!(RawDocument, raw_doc_id)
 
     with {:ok, extraction} <- extract(raw_doc, args),
@@ -18,6 +27,10 @@ defmodule Hub.Pipeline.Processor do
          :ok <- store_signals(processed_doc, extraction.signals),
          :ok <- Resolver.resolve_and_link(raw_doc, extraction.client_names),
          :ok <- PeopleResolver.resolve_and_link(raw_doc, raw_doc.participants) do
+      Hub.Cache.invalidate("feed:documents")
+      Hub.Cache.invalidate_prefix("feed:person:")
+      Hub.Cache.invalidate("people:sidebar")
+      Hub.Cache.invalidate("doc:#{raw_doc_id}")
       Phoenix.PubSub.broadcast(Hub.PubSub, "documents", {:document_processed, processed_doc.id})
       Logger.info("Processed document #{raw_doc_id} — #{length(extraction.signals)} signals extracted")
       :ok

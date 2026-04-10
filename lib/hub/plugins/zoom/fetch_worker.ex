@@ -22,8 +22,9 @@ defmodule Hub.Plugins.Zoom.FetchWorker do
           :ok
         else
           case store_document(args, segments) do
-            {:ok, _raw_doc} ->
+            {:ok, raw_doc} ->
               Logger.info("Stored transcript for meeting #{meeting_uuid} (#{length(segments)} segments)")
+              enqueue_processing(raw_doc)
               :ok
             {:error, reason} ->
               Logger.error("Failed to store transcript for meeting #{meeting_uuid}: #{inspect(reason)}")
@@ -72,6 +73,16 @@ defmodule Hub.Plugins.Zoom.FetchWorker do
   end
 
   defp find_transcript_url(_), do: {:error, "No recording files found"}
+
+  defp enqueue_processing(raw_doc) do
+    %{raw_document_id: raw_doc.id}
+    |> Hub.Pipeline.Processor.new()
+    |> Oban.insert!()
+
+    %{raw_document_id: raw_doc.id}
+    |> Hub.Embeddings.Worker.new()
+    |> Oban.insert!()
+  end
 
   defp store_document(args, segments) do
     participants = Parser.extract_participants(segments)

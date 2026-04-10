@@ -42,17 +42,24 @@ defmodule Hub.Pipeline.Extractor do
     Extract the following as JSON (no markdown, just raw JSON):
     - summary: 2-3 sentence summary focused on decisions and outcomes
     - action_items: [{text, person (if someone was mentioned, otherwise omit)}]
-    - signals: [{type, content (exact quote or close paraphrase), speaker, confidence (0.0-1.0)}]
+    - signals: [{type, content (a meaningful paraphrase with enough context to understand standalone), speaker, confidence (0.0-1.0)}]
     - client_names: any golf course or client names mentioned
+
+    Signal extraction rules:
+    - Each signal must be self-contained and meaningful without reading the transcript
+    - Group related mentions into ONE signal (e.g. multiple quotes about the same competitor = one signal)
+    - Commitments must include a specific deliverable — skip vague affirmations like "I'll do it" or "sure"
+    - Only extract signals with real business value — skip casual conversation, jokes, small talk
+    - Prefer fewer high-quality signals over many low-quality ones
 
     Signal types:
     - feature_request: someone asks for something that doesn't exist
-    - bug_report: something isn't working as expected
-    - competitor_mention: reference to competing products
-    - churn_signal: dissatisfaction, evaluating alternatives
-    - commitment: someone promises to do something
-    - positive_feedback: satisfaction expressed
-    - pricing_discussion: conversation about pricing or costs
+    - bug_report: something isn't working as expected (include what specifically is broken)
+    - competitor_mention: reference to competing products (consolidate into one signal per competitor)
+    - churn_signal: client dissatisfaction, evaluating alternatives
+    - commitment: someone promises a specific deliverable (must name what will be done)
+    - positive_feedback: satisfaction expressed about a specific feature or outcome
+    - pricing_discussion: conversation about pricing, costs, or billing
     - onboarding_issue: problems during client setup or training
 
     Transcript:

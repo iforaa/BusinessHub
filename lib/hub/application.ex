@@ -9,6 +9,7 @@ defmodule Hub.Application do
   def start(_type, _args) do
     children = [
       Hub.Repo,
+      Hub.Cache,
       {Oban, Application.fetch_env!(:hub, Oban)},
       HubWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:hub, :dns_cluster_query) || :ignore},

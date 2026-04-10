@@ -3,7 +3,7 @@ defmodule HubWeb.DocumentLive do
 
   import HubWeb.Helpers, only: [format_date: 1]
 
-  alias Hub.Documents.{ProcessedDocument, RawDocument}
+  alias Hub.Documents.RawDocument
   alias Hub.People.Person
   alias Hub.Repo
 
@@ -26,11 +26,7 @@ defmodule HubWeb.DocumentLive do
 
   @impl true
   def handle_params(%{"id" => id}, _uri, socket) do
-    {raw_doc, processed_doc} =
-      case socket.assigns.live_action do
-        :raw -> load_raw_document(id)
-        :show -> load_processed_document(id)
-      end
+    {raw_doc, processed_doc} = load_raw_document(id)
 
     messages = parse_transcript(raw_doc.content)
     {color_map, avatar_map} = build_speaker_maps(messages)
@@ -46,22 +42,23 @@ defmodule HubWeb.DocumentLive do
   end
 
   defp load_raw_document(id) do
-    raw_doc =
-      from(rd in RawDocument, where: rd.id == ^id, preload: :clients)
-      |> Repo.one!()
+    cache_key = "doc:#{id}"
+    case Hub.Cache.get(cache_key) do
+      {:ok, result} -> result
+      :miss ->
+        raw_doc =
+          from(rd in RawDocument,
+            where: rd.id == ^id,
+            left_join: pd in assoc(rd, :processed_document),
+            left_join: s in assoc(pd, :signals),
+            preload: [:clients, processed_document: {pd, signals: s}]
+          )
+          |> Repo.one!()
 
-    {raw_doc, nil}
-  end
-
-  defp load_processed_document(id) do
-    processed_doc =
-      from(pd in ProcessedDocument,
-        where: pd.id == ^id,
-        preload: [:signals, raw_document: ^from(rd in RawDocument, preload: :clients)]
-      )
-      |> Repo.one!()
-
-    {processed_doc.raw_document, processed_doc}
+        result = {raw_doc, raw_doc.processed_document}
+        Hub.Cache.put(cache_key, result, 300_000)
+        result
+    end
   end
 
   @impl true
@@ -134,25 +131,22 @@ defmodule HubWeb.DocumentLive do
     assigns = assign(assigns, :groups, groups)
 
     ~H"""
-    <div>
-      <div :for={{group, idx} <- Enum.with_index(@groups)} class="mb-2.5">
+    <div class="divide-y" style="border-color: #f0ece4;">
+      <div :for={group <- @groups} class="flex gap-3 py-2.5">
         <% avatar = Map.get(@avatar_map, group.speaker) %>
-        <% bg = if rem(idx, 2) == 0, do: "#f5f2ed", else: "#eeebe5" %>
-        <div class="rounded-xl overflow-hidden" style={"background: #{bg};"}>
-          <div class="flex items-center gap-2.5 px-4 py-2.5" style="border-bottom: 1px solid #e8e5df;">
-            <%= if avatar do %>
-              <img src={avatar} class="w-6 h-6 rounded-full object-cover" />
-            <% else %>
-              <div class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold" style="background: #d8d2c8; color: #fff;">
-                <%= String.first(group.speaker) %>
-              </div>
-            <% end %>
-            <span class="text-[13px] font-semibold" style="color: #3d3832;"><%= group.speaker %></span>
-          </div>
-          <div class="px-4 py-3">
-            <div :for={msg <- group.messages} class="text-sm py-0.5" style="color: #3d3832; line-height: 1.55;">
-              <%= msg.text %>
+        <div class="flex-shrink-0 pt-0.5">
+          <%= if avatar do %>
+            <img src={avatar} class="w-8 h-8 rounded-full object-cover" />
+          <% else %>
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold" style={"background: #{Hub.Colors.initial_color(group.speaker)}; color: #fff;"}>
+              <%= String.first(group.speaker) %>
             </div>
+          <% end %>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-[12px] font-semibold mb-1" style="color: #2d2a26;"><%= group.speaker %></div>
+          <div :for={msg <- group.messages} class="text-[13.5px]" style="color: #3d3832; line-height: 1.55;">
+            <%= msg.text %>
           </div>
         </div>
       </div>

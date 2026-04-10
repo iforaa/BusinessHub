@@ -24,6 +24,8 @@ defmodule HubWeb.FeedLive do
       search_results: nil,
       ai_answer: nil,
       ai_loading: false,
+      ai_step: nil,
+      ai_streaming_text: nil,
       people: people,
       people_grouped: grouped,
       people_map: Map.new(people, &{&1.name, &1.id}),
@@ -43,10 +45,16 @@ defmodule HubWeb.FeedLive do
 
       String.starts_with?(query, "!") ->
         question = String.trim_leading(query, "!")
+        pid = self()
+        user = socket.assigns[:current_user]
         Task.Supervisor.async_nolink(Hub.TaskSupervisor, fn ->
-          AiSearch.query(question)
-        end, shutdown: 30_000)
-        {:noreply, assign(socket, query: query, ai_loading: true, ai_answer: nil, search_results: nil, filtered_person: nil)}
+          AiSearch.query(question,
+            on_step: fn step -> send(pid, {:ai_step, step}) end,
+            on_stream: fn text -> send(pid, {:ai_stream, text}) end,
+            user: user
+          )
+        end, shutdown: 60_000)
+        {:noreply, assign(socket, query: query, ai_loading: true, ai_step: "Starting...", ai_answer: nil, search_results: nil, filtered_person: nil)}
 
       true ->
         {:noreply, assign(socket, search_results: Search.fulltext(query), ai_answer: nil, ai_loading: false, query: query, filtered_person: nil)}
@@ -54,9 +62,17 @@ defmodule HubWeb.FeedLive do
   end
 
   @impl true
+  def handle_info({:ai_step, step}, socket) do
+    {:noreply, assign(socket, ai_step: step)}
+  end
+
+  def handle_info({:ai_stream, text}, socket) do
+    {:noreply, assign(socket, ai_streaming_text: text, ai_loading: false)}
+  end
+
   def handle_info({ref, {:ok, result}}, socket) when is_reference(ref) do
     Process.demonitor(ref, [:flush])
-    {:noreply, assign(socket, ai_answer: result, ai_loading: false)}
+    {:noreply, assign(socket, ai_answer: result, ai_loading: false, ai_streaming_text: nil)}
   end
 
   def handle_info({ref, {:error, reason}}, socket) when is_reference(ref) do
@@ -175,10 +191,10 @@ defmodule HubWeb.FeedLive do
 
         <%= cond do %>
           <% @ai_loading -> %>
-            <div class="text-center py-12">
-              <div class="inline-block animate-spin rounded-full h-8 w-8 border-2" style="border-color: #e8e5df; border-top-color: #a09888;"></div>
-              <p class="text-sm mt-3" style="color: #a09888;">Thinking...</p>
-            </div>
+            <.ai_loading_steps step={@ai_step} />
+
+          <% @ai_streaming_text && !@ai_answer -> %>
+            <.ai_streaming_card text={@ai_streaming_text} />
 
           <% @ai_answer -> %>
             <.ai_answer_card answer={@ai_answer} />
@@ -190,6 +206,60 @@ defmodule HubWeb.FeedLive do
             <.feed documents={@documents} people_map={@people_map} filtered_person={@filtered_person} />
         <% end %>
       </div>
+    </div>
+    """
+  end
+
+  @ai_steps [
+    {"embedding", "Embedding your question"},
+    {"searching", "Searching across conversations"},
+    {"context", "Building context from matches"},
+    {"thinking", "Generating answer with AI"},
+    {"done", "Complete"}
+  ]
+
+  defp ai_loading_steps(assigns) do
+    steps = @ai_steps
+    current = assigns.step || "embedding"
+    current_idx = Enum.find_index(steps, fn {id, _} -> id == current end) || 0
+    assigns = assign(assigns, steps: steps, current_idx: current_idx)
+
+    ~H"""
+    <div class="rounded-xl p-6" style="background: #fff; border: 1px solid #e8e5df;">
+      <div class="space-y-3">
+        <div :for={{step_id, step_label} <- @steps} class="flex items-center gap-3">
+          <% idx = Enum.find_index(@steps, fn {id, _} -> id == step_id end) %>
+          <%= cond do %>
+            <% idx < @current_idx -> %>
+              <div class="w-5 h-5 rounded-full flex items-center justify-center" style="background: #d4cec2;">
+                <svg class="w-3 h-3" style="color: #fff;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <span class="text-sm" style="color: #a09888;"><%= step_label %></span>
+
+            <% idx == @current_idx -> %>
+              <div class="w-5 h-5 rounded-full border-2 animate-spin" style="border-color: #e8e5df; border-top-color: #7c6f5b;"></div>
+              <span class="text-sm font-medium" style="color: #3d3832;"><%= step_label %></span>
+
+            <% true -> %>
+              <div class="w-5 h-5 rounded-full" style="border: 2px solid #e8e5df;"></div>
+              <span class="text-sm" style="color: #d4cec2;"><%= step_label %></span>
+          <% end %>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  defp ai_streaming_card(assigns) do
+    ~H"""
+    <div class="rounded-xl p-5" style="background: #fff; border: 1px solid #e8e5df;">
+      <div class="mb-3">
+        <span class="text-[11px] font-semibold px-2.5 py-1 rounded" style="background: #f0ece4; color: #7c6f5b;">AI Answer</span>
+        <span class="ml-2 inline-block w-1.5 h-4 animate-pulse rounded-sm" style="background: #7c6f5b;"></span>
+      </div>
+      <div class="text-sm leading-relaxed whitespace-pre-wrap" style="color: #3d3832;"><%= @text %></div>
     </div>
     """
   end
@@ -289,30 +359,74 @@ defmodule HubWeb.FeedLive do
     ]
   end
 
+  @feed_fields [:id, :source, :source_id, :participants, :metadata, :ingested_at, :inserted_at, :updated_at]
+
   defp load_documents do
+    case Hub.Cache.get("feed:documents") do
+      {:ok, docs} -> docs
+      :miss ->
+        docs = fetch_documents()
+        Hub.Cache.put("feed:documents", docs, 60_000)
+        docs
+    end
+  end
+
+  defp fetch_documents do
+    ids_query =
+      from(rd in RawDocument,
+        select: rd.id,
+        order_by: [desc: fragment("?->>'start_time'", rd.metadata)],
+        limit: 50
+      )
+
     from(rd in RawDocument,
-      left_join: pd in assoc(rd, :processed_document),
-      left_join: s in assoc(pd, :signals),
-      preload: [processed_document: {pd, signals: s}],
-      order_by: [desc: fragment("?->>'start_time'", rd.metadata)],
-      limit: 50
+      where: rd.id in subquery(ids_query),
+      select: struct(rd, ^@feed_fields),
+      preload: [processed_document: :signals],
+      order_by: [desc: fragment("?->>'start_time'", rd.metadata)]
     )
     |> Repo.all()
   end
 
   defp load_documents_for_person(person_id) do
+    cache_key = "feed:person:#{person_id}"
+    case Hub.Cache.get(cache_key) do
+      {:ok, docs} -> docs
+      :miss ->
+        docs = fetch_documents_for_person(person_id)
+        Hub.Cache.put(cache_key, docs, 60_000)
+        docs
+    end
+  end
+
+  defp fetch_documents_for_person(person_id) do
+    ids_query =
+      from(rd in RawDocument,
+        join: dp in "document_people", on: dp.raw_document_id == rd.id,
+        where: dp.person_id == type(^person_id, :binary_id),
+        select: rd.id
+      )
+
     from(rd in RawDocument,
-      join: dp in "document_people", on: dp.raw_document_id == rd.id,
-      left_join: pd in assoc(rd, :processed_document),
-      left_join: s in assoc(pd, :signals),
-      where: dp.person_id == type(^person_id, :binary_id),
-      preload: [processed_document: {pd, signals: s}],
+      where: rd.id in subquery(ids_query),
+      select: struct(rd, ^@feed_fields),
+      preload: [processed_document: :signals],
       order_by: [desc: fragment("?->>'start_time'", rd.metadata)]
     )
     |> Repo.all()
   end
 
   defp load_people do
+    case Hub.Cache.get("people:sidebar") do
+      {:ok, people} -> people
+      :miss ->
+        people = fetch_people()
+        Hub.Cache.put("people:sidebar", people, 300_000)
+        people
+    end
+  end
+
+  defp fetch_people do
     from(p in Person,
       left_join: dp in "document_people", on: dp.person_id == p.id,
       group_by: p.id,

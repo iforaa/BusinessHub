@@ -20,7 +20,6 @@ defmodule HubWeb.Router do
     live "/", FeedLive
     live "/people", PeopleLive
     live "/documents/raw/:id", DocumentLive, :raw
-    live "/documents/:id", DocumentLive, :show
     live "/clients/:id", ClientLive
   end
 
