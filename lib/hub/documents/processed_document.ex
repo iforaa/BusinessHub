@@ -12,6 +12,7 @@ defmodule Hub.Documents.ProcessedDocument do
     has_many :signals, Signal
 
     field :summary, :string
+    field :ai_title, :string
     field :action_items, {:array, :map}, default: []
     field :model, :string
     field :prompt_version, :string
@@ -22,7 +23,7 @@ defmodule Hub.Documents.ProcessedDocument do
 
   def changeset(processed_document, attrs) do
     processed_document
-    |> cast(attrs, [:raw_document_id, :summary, :action_items, :model, :prompt_version, :processed_at])
+    |> cast(attrs, [:raw_document_id, :summary, :ai_title, :action_items, :model, :prompt_version, :processed_at])
     |> validate_required([:raw_document_id])
     |> foreign_key_constraint(:raw_document_id)
   end
