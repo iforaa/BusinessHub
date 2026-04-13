@@ -336,7 +336,7 @@ defmodule HubWeb.FeedLive do
     <%= if @documents == [] do %>
       <div class="text-center py-12" style="color: #a09888;">
         <%= if @filtered_person do %>
-          <p class="text-lg">No results found</p>
+          <p class="text-xl">No results found</p>
         <% else %>
           <p class="text-xl">No transcripts yet</p>
           <p class="text-[15px] mt-2">Transcripts will appear here once meetings are ingested.</p>

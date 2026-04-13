@@ -113,8 +113,12 @@ defmodule Hub.Pipeline.Merger do
     topic in @generic_topics || Regex.match?(@name_meeting_pattern, topic)
   end
 
+  defp signal_summary(signals) do
+    signals |> Enum.map(&to_string(&1["content"] || "")) |> Enum.join("; ")
+  end
+
   defp generate_full_title(summary, signals) do
-    signal_text = signals |> Enum.map(&(to_string(&1["content"] || &1[:content] || ""))) |> Enum.join("; ")
+    signal_text = signal_summary(signals)
 
     prompt = """
     Generate a short, witty meeting title (under 10 words) based on this meeting.
@@ -132,7 +136,7 @@ defmodule Hub.Pipeline.Merger do
   end
 
   defp generate_quip(topic, summary, signals) do
-    signal_text = signals |> Enum.map(&(to_string(&1["content"] || &1[:content] || ""))) |> Enum.join("; ")
+    signal_text = signal_summary(signals)
 
     prompt = """
     This meeting was called "#{topic}". Generate a one-sentence humorous quip about what actually happened.
