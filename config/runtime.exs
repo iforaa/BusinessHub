@@ -31,7 +31,7 @@ config :hub, :zoom,
 
 config :hub, :claude,
   api_key: System.get_env("CLAUDE_API_KEY"),
-  model: System.get_env("CLAUDE_MODEL") || "claude-sonnet-4-20250514"
+  model: System.get_env("CLAUDE_MODEL") || "claude-sonnet-4-6-20250627"
 
 if config_env() == :prod do
   database_url =

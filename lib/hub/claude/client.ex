@@ -85,6 +85,6 @@ defmodule Hub.Claude.Client do
   end
 
   defp default_model do
-    Application.fetch_env!(:hub, :claude)[:model] || "claude-sonnet-4-20250514"
+    Application.fetch_env!(:hub, :claude)[:model] || "claude-sonnet-4-6-20250627"
   end
 end

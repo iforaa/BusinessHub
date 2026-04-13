@@ -67,7 +67,7 @@ defmodule Hub.Pipeline.Processor do
       summary: extraction.summary,
       ai_title: extraction[:ai_title],
       action_items: extraction.action_items,
-      model: Application.get_env(:hub, :claude)[:model] || "claude-sonnet-4-20250514",
+      model: Application.get_env(:hub, :claude)[:model] || "claude-sonnet-4-6-20250627",
       prompt_version: Extractor.prompt_version(),
       processed_at: DateTime.utc_now()
     })
