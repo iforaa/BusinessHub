@@ -29,7 +29,7 @@ defmodule HubWeb.Components.SignalBadge do
       |> assign(:label, Map.get(@labels, assigns.type, assigns.type))
 
     ~H"""
-    <span class={"inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium #{@color} #{@class}"} data-type={@type}>
+    <span class={"inline-flex items-center rounded-full px-2.5 py-0.5 text-[13px] font-medium #{@color} #{@class}"} data-type={@type}>
       <%= @label %>
     </span>
     """

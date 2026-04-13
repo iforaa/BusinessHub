@@ -65,38 +65,38 @@ defmodule HubWeb.DocumentLive do
   def render(assigns) do
     ~H"""
     <div class="max-w-3xl mx-auto py-6 px-6">
-      <.link navigate="/" class="text-[13px] inline-block mb-4 hover:underline" style="color: #7c6f5b;">&larr; Back to Feed</.link>
+      <.link navigate="/" class="text-[14px] inline-block mb-4 hover:underline" style="color: #7c6f5b;">&larr; Back to Feed</.link>
 
-      <h1 class="text-[22px] font-bold mb-1" style="color: #2d2a26; letter-spacing: -0.3px;">
+      <h1 class="text-[24px] font-bold mb-1" style="color: #2d2a26; letter-spacing: -0.3px;">
         <%= (@processed && @processed.ai_title) || @raw_document.metadata["topic"] || "Untitled Meeting" %>
       </h1>
 
-      <div class="text-[13px] mb-5" style="color: #a09888;">
+      <div class="text-[14px] mb-5" style="color: #a09888;">
         <%= Enum.join(@raw_document.participants, ", ") %>
         &middot;
         <%= format_date(@raw_document.metadata["start_time"] || @raw_document.ingested_at) %>
         <%= unless @processed do %>
-          <span class="ml-2 text-[11px] px-2 py-0.5 rounded" style="background: #f0ece4; color: #a09888;">Unprocessed</span>
+          <span class="ml-2 text-[13px] px-2 py-0.5 rounded" style="background: #f0ece4; color: #a09888;">Unprocessed</span>
         <% end %>
       </div>
 
       <%= if @processed do %>
         <div class="rounded-xl mb-3.5" style="background: #fff; border: 1px solid #e8e5df; padding: 14px 18px;">
-          <div class="text-[10px] font-semibold uppercase tracking-widest mb-2" style="color: #a09888;">Summary</div>
-          <p class="text-sm leading-relaxed" style="color: #3d3832;"><%= @processed.summary %></p>
+          <div class="text-[12px] font-semibold uppercase tracking-widest mb-2" style="color: #a09888;">Summary</div>
+          <p class="text-[15px] leading-relaxed" style="color: #3d3832;"><%= @processed.summary %></p>
         </div>
 
         <%= if @processed.signals != [] do %>
           <div class="rounded-xl mb-3.5" style="background: #fff; border: 1px solid #e8e5df; padding: 14px 18px;">
-            <div class="text-[10px] font-semibold uppercase tracking-widest mb-2.5" style="color: #a09888;">Signals</div>
+            <div class="text-[12px] font-semibold uppercase tracking-widest mb-2.5" style="color: #a09888;">Signals</div>
             <div>
               <div :for={signal <- @processed.signals} class="flex items-start gap-3 py-2" style="border-top: 1px solid #f5f2ed; &:first-child { border-top: none; }">
-                <span class={"text-[11px] px-2 py-0.5 rounded font-medium flex-shrink-0 " <> Hub.Signals.style(signal.type)}>
+                <span class={"text-[13px] px-2 py-0.5 rounded font-medium flex-shrink-0 " <> Hub.Signals.style(signal.type)}>
                   <%= Hub.Signals.label(signal.type) %>
                 </span>
                 <div>
-                  <p class="text-sm" style="color: #5c5549;">"<%= signal.content %>"</p>
-                  <p class="text-xs mt-0.5" style="color: #a09888;">— <%= signal.speaker %></p>
+                  <p class="text-[15px]" style="color: #5c5549;">"<%= signal.content %>"</p>
+                  <p class="text-[13px] mt-0.5" style="color: #a09888;">— <%= signal.speaker %></p>
                 </div>
               </div>
             </div>
@@ -105,8 +105,8 @@ defmodule HubWeb.DocumentLive do
 
         <%= if @processed.action_items != [] do %>
           <div class="rounded-xl mb-3.5" style="background: #fff; border: 1px solid #e8e5df; padding: 14px 18px;">
-            <div class="text-[10px] font-semibold uppercase tracking-widest mb-2" style="color: #a09888;">Action Items</div>
-            <div :for={item <- @processed.action_items} class="text-sm py-1" style="color: #5c5549;">
+            <div class="text-[12px] font-semibold uppercase tracking-widest mb-2" style="color: #a09888;">Action Items</div>
+            <div :for={item <- @processed.action_items} class="text-[15px] py-1" style="color: #5c5549;">
               <%= item["text"] %>
               <%= if item["person"] do %><span style="color: #a09888;"> — <%= item["person"] %></span><% end %>
             </div>
@@ -115,9 +115,9 @@ defmodule HubWeb.DocumentLive do
       <% end %>
 
       <div class="rounded-xl" style="background: #fff; border: 1px solid #e8e5df; padding: 14px 18px;">
-        <div class="text-[10px] font-semibold uppercase tracking-widest mb-3" style="color: #a09888;">Transcript</div>
+        <div class="text-[12px] font-semibold uppercase tracking-widest mb-3" style="color: #a09888;">Transcript</div>
         <%= if @messages == [] do %>
-          <div class="text-sm whitespace-pre-wrap font-mono" style="color: #5c5549;"><%= @raw_document.content %></div>
+          <div class="text-[15px] whitespace-pre-wrap font-mono" style="color: #5c5549;"><%= @raw_document.content %></div>
         <% else %>
           <.transcript messages={@messages} color_map={@color_map} avatar_map={@avatar_map} />
         <% end %>
@@ -138,14 +138,14 @@ defmodule HubWeb.DocumentLive do
           <%= if avatar do %>
             <img src={avatar} class="w-8 h-8 rounded-full object-cover" />
           <% else %>
-            <div class="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold" style={"background: #{Hub.Colors.initial_color(group.speaker)}; color: #fff;"}>
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-[14px] font-semibold" style={"background: #{Hub.Colors.initial_color(group.speaker)}; color: #fff;"}>
               <%= String.first(group.speaker) %>
             </div>
           <% end %>
         </div>
         <div class="flex-1 min-w-0">
-          <div class="text-[12px] font-semibold mb-1" style="color: #2d2a26;"><%= group.speaker %></div>
-          <div :for={msg <- group.messages} class="text-[13.5px]" style="color: #3d3832; line-height: 1.55;">
+          <div class="text-[14px] font-semibold mb-1" style="color: #2d2a26;"><%= group.speaker %></div>
+          <div :for={msg <- group.messages} class="text-[15px]" style="color: #3d3832; line-height: 1.55;">
             <%= msg.text %>
           </div>
         </div>

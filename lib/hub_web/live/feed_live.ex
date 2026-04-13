@@ -147,16 +147,16 @@ defmodule HubWeb.FeedLive do
         <%= for {group_label, group_people} <- @people_grouped do %>
           <%= if group_people != [] do %>
             <div class="mb-5">
-              <div class="text-[10px] font-semibold uppercase tracking-widest px-2 mb-1.5" style="color: #a09888;"><%= group_label %></div>
+              <div class="text-[12px] font-semibold uppercase tracking-widest px-2 mb-1.5" style="color: #a09888;"><%= group_label %></div>
               <button
                 :for={person <- group_people}
                 phx-click="filter_person"
                 phx-value-id={person.id}
-                class="flex items-center justify-between w-full px-2 py-1.5 rounded-md text-[13px] text-left transition-all"
+                class="flex items-center justify-between w-full px-2 py-1.5 rounded-md text-[14px] text-left transition-all"
                 style={"color: #{if @filtered_person && @filtered_person.id == person.id, do: "#2d2a26", else: "#5c5549"}; background: #{if @filtered_person && @filtered_person.id == person.id, do: "#fff", else: "transparent"}; #{if @filtered_person && @filtered_person.id == person.id, do: "box-shadow: 0 1px 3px rgba(0,0,0,0.08); font-weight: 500;", else: ""}"}
               >
                 <span class="truncate"><%= person.name %></span>
-                <span class="text-[11px]" style="color: #b5aa9a;"><%= person.conversation_count %></span>
+                <span class="text-[13px]" style="color: #b5aa9a;"><%= person.conversation_count %></span>
               </button>
             </div>
           <% end %>
@@ -172,7 +172,7 @@ defmodule HubWeb.FeedLive do
             value={@query}
             placeholder="Search transcripts... (prefix with ! for AI)"
             autocomplete="off"
-            class="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all"
+            class="w-full rounded-xl px-4 py-2.5 text-[15px] outline-none transition-all"
             style="background: #fff; border: 1px solid #e8e5df; color: #2d2a26;"
             onfocus="this.style.borderColor='#c4b89c'; this.style.boxShadow='0 0 0 3px rgba(196,184,156,0.15)'"
             onblur="this.style.borderColor='#e8e5df'; this.style.boxShadow='none'"
@@ -181,8 +181,8 @@ defmodule HubWeb.FeedLive do
 
         <%= if @filtered_person do %>
           <div class="flex items-center gap-2 mb-4">
-            <span class="text-sm" style="color: #5c5549;">Showing conversations with</span>
-            <span class="inline-flex items-center gap-1 text-sm font-medium px-2.5 py-0.5 rounded-full" style="background: #f0ece4; color: #5c5549;">
+            <span class="text-[15px]" style="color: #5c5549;">Showing conversations with</span>
+            <span class="inline-flex items-center gap-1 text-[15px] font-medium px-2.5 py-0.5 rounded-full" style="background: #f0ece4; color: #5c5549;">
               <%= @filtered_person.name %>
               <button phx-click="clear_filter" class="ml-1" style="color: #7c6f5b;">&times;</button>
             </span>
@@ -236,15 +236,15 @@ defmodule HubWeb.FeedLive do
                   <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <span class="text-sm" style="color: #a09888;"><%= step_label %></span>
+              <span class="text-[15px]" style="color: #a09888;"><%= step_label %></span>
 
             <% idx == @current_idx -> %>
               <div class="w-5 h-5 rounded-full border-2 animate-spin" style="border-color: #e8e5df; border-top-color: #7c6f5b;"></div>
-              <span class="text-sm font-medium" style="color: #3d3832;"><%= step_label %></span>
+              <span class="text-[15px] font-medium" style="color: #3d3832;"><%= step_label %></span>
 
             <% true -> %>
               <div class="w-5 h-5 rounded-full" style="border: 2px solid #e8e5df;"></div>
-              <span class="text-sm" style="color: #d4cec2;"><%= step_label %></span>
+              <span class="text-[15px]" style="color: #d4cec2;"><%= step_label %></span>
           <% end %>
         </div>
       </div>
@@ -256,10 +256,10 @@ defmodule HubWeb.FeedLive do
     ~H"""
     <div class="rounded-xl p-5" style="background: #fff; border: 1px solid #e8e5df;">
       <div class="mb-3">
-        <span class="text-[11px] font-semibold px-2.5 py-1 rounded" style="background: #f0ece4; color: #7c6f5b;">AI Answer</span>
+        <span class="text-[13px] font-semibold px-2.5 py-1 rounded" style="background: #f0ece4; color: #7c6f5b;">AI Answer</span>
         <span class="ml-2 inline-block w-1.5 h-4 animate-pulse rounded-sm" style="background: #7c6f5b;"></span>
       </div>
-      <div class="text-sm leading-relaxed whitespace-pre-wrap" style="color: #3d3832;"><%= @text %></div>
+      <div class="text-[15px] leading-relaxed whitespace-pre-wrap" style="color: #3d3832;"><%= @text %></div>
     </div>
     """
   end
@@ -268,17 +268,17 @@ defmodule HubWeb.FeedLive do
     ~H"""
     <div class="rounded-xl p-5" style="background: #fff; border: 1px solid #e8e5df;">
       <div class="mb-3">
-        <span class="text-[11px] font-semibold px-2.5 py-1 rounded" style="background: #f0ece4; color: #7c6f5b;">AI Answer</span>
+        <span class="text-[13px] font-semibold px-2.5 py-1 rounded" style="background: #f0ece4; color: #7c6f5b;">AI Answer</span>
       </div>
-      <div class="prose-hub text-sm leading-relaxed" style="color: #3d3832;"><%= raw(markdown(@answer.answer)) %></div>
+      <div class="prose-hub text-[15px] leading-relaxed" style="color: #3d3832;"><%= raw(markdown(@answer.answer)) %></div>
       <%= if @answer.sources != [] do %>
         <div class="mt-4 pt-3" style="border-top: 1px solid #f0ece4;">
-          <div class="text-[11px] mb-1.5" style="color: #a09888;">Sources</div>
+          <div class="text-[13px] mb-1.5" style="color: #a09888;">Sources</div>
           <div class="flex flex-wrap gap-x-3 gap-y-1">
             <.link
               :for={source <- @answer.sources}
               navigate={"/documents/raw/#{source.id}"}
-              class="text-xs hover:underline"
+              class="text-[13px] hover:underline"
               style="color: #7c6f5b;"
             >
               [<%= source.index %>] <%= source.topic %> · <%= format_date(source.start_time) %>
@@ -293,12 +293,12 @@ defmodule HubWeb.FeedLive do
   defp search_results(assigns) do
     ~H"""
     <div class="mb-4">
-      <span class="text-[13px]" style="color: #a09888;"><%= length(@results) %> result(s) for "<%= @query %>"</span>
+      <span class="text-[14px]" style="color: #a09888;"><%= length(@results) %> result(s) for "<%= @query %>"</span>
     </div>
 
     <%= if @results == [] do %>
       <div class="text-center py-12" style="color: #a09888;">
-        <p class="text-lg">No results found</p>
+        <p class="text-xl">No results found</p>
       </div>
     <% else %>
       <div class="space-y-2.5">
@@ -313,7 +313,7 @@ defmodule HubWeb.FeedLive do
     <.link navigate={"/documents/raw/#{@result.id}"} class="block">
       <div class="rounded-xl overflow-hidden transition-all" style="background: #fff; border: 1px solid #e8e5df;" onmouseover="this.style.borderColor='#d4cdc0'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.04)'" onmouseout="this.style.borderColor='#e8e5df'; this.style.boxShadow='none'">
         <div class="px-4 py-2" style="background: #faf8f5; border-bottom: 1px solid #f0ece4;">
-          <span class="text-xs" style="color: #a09888;">
+          <span class="text-[13px]" style="color: #a09888;">
             <%= @result.metadata["topic"] || "Untitled Meeting" %>
             <span class="mx-1">&middot;</span>
             <%= format_date(@result.metadata["start_time"] || @result.ingested_at) %>
@@ -322,7 +322,7 @@ defmodule HubWeb.FeedLive do
           </span>
         </div>
         <div class="px-4 py-1">
-          <div :for={excerpt <- @result.excerpts} class="text-sm leading-relaxed py-2" style="color: #5c5549; border-top: 1px dashed #e8e5df; first:border-top-0;">
+          <div :for={excerpt <- @result.excerpts} class="text-[15px] leading-relaxed py-2" style="color: #5c5549; border-top: 1px dashed #e8e5df; first:border-top-0;">
             <%= raw(excerpt) %>
           </div>
         </div>
@@ -338,8 +338,8 @@ defmodule HubWeb.FeedLive do
         <%= if @filtered_person do %>
           <p class="text-lg">No results found</p>
         <% else %>
-          <p class="text-lg">No transcripts yet</p>
-          <p class="text-sm mt-2">Transcripts will appear here once meetings are ingested.</p>
+          <p class="text-xl">No transcripts yet</p>
+          <p class="text-[15px] mt-2">Transcripts will appear here once meetings are ingested.</p>
         <% end %>
       </div>
     <% else %>
