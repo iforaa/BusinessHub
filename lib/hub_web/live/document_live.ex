@@ -37,7 +37,7 @@ defmodule HubWeb.DocumentLive do
       messages: messages,
       color_map: color_map,
       avatar_map: avatar_map,
-      page_title: raw_doc.metadata["topic"] || "Document"
+      page_title: (processed_doc && processed_doc.ai_title) || raw_doc.metadata["topic"] || "Document"
     )}
   end
 
@@ -68,7 +68,7 @@ defmodule HubWeb.DocumentLive do
       <.link navigate="/" class="text-[13px] inline-block mb-4 hover:underline" style="color: #7c6f5b;">&larr; Back to Feed</.link>
 
       <h1 class="text-[22px] font-bold mb-1" style="color: #2d2a26; letter-spacing: -0.3px;">
-        <%= @raw_document.metadata["topic"] || "Untitled Meeting" %>
+        <%= (@processed && @processed.ai_title) || @raw_document.metadata["topic"] || "Untitled Meeting" %>
       </h1>
 
       <div class="text-[13px] mb-5" style="color: #a09888;">

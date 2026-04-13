@@ -20,7 +20,7 @@ defmodule HubWeb.Components.DocumentCard do
       <div class="rounded-xl mb-3 transition-all" style="background: #fff; border: 1px solid #e8e5df; padding: 14px 18px;" onmouseover="this.style.borderColor='#d4cdc0'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.04)'" onmouseout="this.style.borderColor='#e8e5df'; this.style.boxShadow='none'">
         <div class="flex items-baseline justify-between mb-1">
           <h3 class="text-[15px] font-semibold" style="color: #2d2a26;">
-            <%= @document.metadata["topic"] || "Untitled Meeting" %>
+            <%= (@processed && @processed.ai_title) || @document.metadata["topic"] || "Untitled Meeting" %>
             <%= unless @processed do %>
               <span class="text-[11px] font-medium ml-2 px-2 py-0.5 rounded" style="background: #f0ece4; color: #a09888;">Unprocessed</span>
             <% end %>
