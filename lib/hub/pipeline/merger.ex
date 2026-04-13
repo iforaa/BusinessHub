@@ -121,15 +121,15 @@ defmodule Hub.Pipeline.Merger do
     signal_text = signal_summary(signals)
 
     prompt = """
-    Generate a short, witty meeting title (under 10 words) based on this meeting.
+    Generate a short, witty meeting title (under 8 words) that hints at what was actually discussed.
 
     Summary: #{summary}
-    Signals: #{signal_text}
+    Key signals: #{signal_text}
 
-    Playful and observational, not corny. Return only the title, no quotes.
+    Be specific to the content — reference actual topics, decisions, or tensions. Slightly humorous. Return only the title, no quotes.
     """
 
-    case Hub.Claude.Client.chat(prompt, model: "claude-haiku-4-5-20251001", max_tokens: 50) do
+    case Hub.Claude.Client.chat(prompt, model: "claude-sonnet-4-6", max_tokens: 40) do
       {:ok, title} -> String.trim(title) |> String.trim("\"")
       {:error, _} -> nil
     end
@@ -139,15 +139,14 @@ defmodule Hub.Pipeline.Merger do
     signal_text = signal_summary(signals)
 
     prompt = """
-    This meeting was called "#{topic}". Generate a one-sentence humorous quip about what actually happened.
-
+    Meeting: "#{topic}"
     Summary: #{summary}
-    Signals: #{signal_text}
+    Key signals: #{signal_text}
 
-    Observational humor, not sarcastic. Return only the quip, no quotes.
+    Write a short subtitle (8-15 words max) that captures what actually happened. Reference specific topics or decisions. Slightly witty but informative. Return only the subtitle, no quotes.
     """
 
-    case Hub.Claude.Client.chat(prompt, model: "claude-haiku-4-5-20251001", max_tokens: 80) do
+    case Hub.Claude.Client.chat(prompt, model: "claude-sonnet-4-6", max_tokens: 40) do
       {:ok, quip} -> "#{topic}. #{String.trim(quip) |> String.trim("\"")}"
       {:error, _} -> nil
     end
