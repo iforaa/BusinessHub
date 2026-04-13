@@ -3,16 +3,22 @@ defmodule Hub.Pipeline.Merger do
 
   require Logger
 
-  def merge([single]) do
-    %{
+  def merge(results, metadata \\ %{})
+
+  def merge([single], metadata) do
+    result = %{
       summary: single["summary"],
       action_items: single["action_items"] || [],
       signals: single["signals"] || [],
       client_names: single["client_names"] || []
     }
+
+    topic = metadata["topic"]
+    ai_title = generate_title(topic, result.summary, result.signals)
+    Map.put(result, :ai_title, ai_title)
   end
 
-  def merge(results) do
+  def merge(results, metadata) do
     raw = %{
       summaries: results |> Enum.map(& &1["summary"]) |> Enum.reject(&is_nil/1),
       action_items: results |> Enum.flat_map(& (&1["action_items"] || [])),
@@ -21,9 +27,13 @@ defmodule Hub.Pipeline.Merger do
     }
 
     case consolidate(raw) do
-      {:ok, consolidated} -> consolidated
+      {:ok, consolidated} ->
+        topic = metadata["topic"]
+        ai_title = generate_title(topic, consolidated.summary, consolidated.signals)
+        Map.put(consolidated, :ai_title, ai_title)
+
       {:error, _} ->
-        %{summary: List.first(raw.summaries) || "", action_items: raw.action_items, signals: raw.signals, client_names: raw.client_names}
+        %{summary: List.first(raw.summaries) || "", action_items: raw.action_items, signals: raw.signals, client_names: raw.client_names, ai_title: nil}
     end
   end
 
@@ -84,6 +94,58 @@ defmodule Hub.Pipeline.Merger do
             end
           nil -> {:error, :parse_failed}
         end
+    end
+  end
+
+  @generic_topics ["Zoom Meeting", "My Meeting", "zoom meeting", "my meeting", ""]
+  @name_meeting_pattern ~r/^[\w\s]+'s Meeting$/i
+
+  defp generate_title(topic, summary, signals) do
+    if generic_topic?(topic) do
+      generate_full_title(summary, signals)
+    else
+      generate_quip(topic, summary, signals)
+    end
+  end
+
+  defp generic_topic?(nil), do: true
+  defp generic_topic?(topic) do
+    topic in @generic_topics || Regex.match?(@name_meeting_pattern, topic)
+  end
+
+  defp generate_full_title(summary, signals) do
+    signal_text = signals |> Enum.map(&(to_string(&1["content"] || &1[:content] || ""))) |> Enum.join("; ")
+
+    prompt = """
+    Generate a short, witty meeting title (under 10 words) based on this meeting.
+
+    Summary: #{summary}
+    Signals: #{signal_text}
+
+    Playful and observational, not corny. Return only the title, no quotes.
+    """
+
+    case Hub.Claude.Client.chat(prompt, model: "claude-haiku-4-5-20251001", max_tokens: 50) do
+      {:ok, title} -> String.trim(title) |> String.trim("\"")
+      {:error, _} -> nil
+    end
+  end
+
+  defp generate_quip(topic, summary, signals) do
+    signal_text = signals |> Enum.map(&(to_string(&1["content"] || &1[:content] || ""))) |> Enum.join("; ")
+
+    prompt = """
+    This meeting was called "#{topic}". Generate a one-sentence humorous quip about what actually happened.
+
+    Summary: #{summary}
+    Signals: #{signal_text}
+
+    Observational humor, not sarcastic. Return only the quip, no quotes.
+    """
+
+    case Hub.Claude.Client.chat(prompt, model: "claude-haiku-4-5-20251001", max_tokens: 80) do
+      {:ok, quip} -> "#{topic}. #{String.trim(quip) |> String.trim("\"")}"
+      {:error, _} -> nil
     end
   end
 end
