@@ -42,7 +42,7 @@ defmodule Hub.Pipeline.Processor do
   end
 
   defp extract(_raw_doc, %{"test_extraction" => test_data}) do
-    {:ok, Merger.merge([test_data])}
+    {:ok, Merger.merge([test_data], %{})}
   end
 
   defp extract(raw_doc, _args) do
@@ -57,7 +57,7 @@ defmodule Hub.Pipeline.Processor do
         end
       end)
 
-    {:ok, Merger.merge(results)}
+    {:ok, Merger.merge(results, raw_doc.metadata)}
   end
 
   defp store_processed(raw_doc, extraction) do
@@ -65,6 +65,7 @@ defmodule Hub.Pipeline.Processor do
     |> ProcessedDocument.changeset(%{
       raw_document_id: raw_doc.id,
       summary: extraction.summary,
+      ai_title: extraction[:ai_title],
       action_items: extraction.action_items,
       model: Application.get_env(:hub, :claude)[:model] || "claude-sonnet-4-20250514",
       prompt_version: Extractor.prompt_version(),
